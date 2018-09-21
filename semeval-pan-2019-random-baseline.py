@@ -17,9 +17,14 @@ import sys
 import xml.sax
 import random
 
+from library.sentiment import SentimentAnalysis
+
 random.seed(42)
 runOutputFileName = "prediction.txt"
 
+"""Global Variables"""
+num_articles = 0
+char_len = 0
 
 def parse_options():
     """Parses the command line options."""
@@ -59,16 +64,39 @@ class HyperpartisanNewsRandomPredictor(xml.sax.ContentHandler):
     def __init__(self, outFile):
         xml.sax.ContentHandler.__init__(self)
         self.outFile = outFile
+        self.article_content = ''
+        self.sentiment_analyser = SentimentAnalysis(filename='library/SentiWordNet.txt')
+        self.outFile.write('articleId' + "," + 'content_length' + "," + 'content_polarity' + "," + 'title_length' + "," + 'title_polarity' + "," + 'article_date' + "\n")
 
     def startElement(self, name, attrs):
+        self.current_element = name
         if name == "article":
-            articleId = attrs.getValue("id") # id of the article for which hyperpartisanship should be predicted
-            prediction = random.choice(["true", "false"]) # random prediction
-            confidence = random.random() # random confidence value for prediction
+            self.article_content = ''
+            if "published-at" in attrs.keys():
+                self.article_date = attrs.getValue("published-at")
+            else:
+                self.article_date = None
+            self.article_title = attrs.getValue("title")
+            self.articleId = attrs.getValue("id") # id of the article for which hyperpartisanship should be predicted
+            # prediction = random.choice(["true", "false"]) # random prediction
+            # confidence = random.random() # random confidence value for prediction
+            # self.outFile.write(self.articleId + ", " + prediction + ", " + str(confidence) + "\n")
+
             # output format per line: "<article id> <prediction>[ <confidence>]"
             #   - prediction is either "true" (hyperpartisan) or "false" (not hyperpartisan)
             #   - confidence is an optional value to describe the confidence of the predictor in the prediction---the higher, the more confident
-            self.outFile.write(articleId + " " + prediction + " " + str(confidence) + "\n")
+
+    def endElement(self, name):
+        global num_articles, char_len
+        if name == "article":
+            char_len += len(self.article_content)
+            polarity_content = self.sentiment_analyser.score(self.article_content)
+            polarity_title = self.sentiment_analyser.score(self.article_title)
+            num_articles += 1
+            self.outFile.write(self.articleId + "," + str(len(self.article_content)) + "," + str(polarity_content) + "," + str(len(self.article_title)) + "," + str(polarity_title) + "," + str(self.article_date) + "\n")
+
+    def characters(self, content):
+        self.article_content += content
 
 
 ########## MAIN ##########
@@ -76,12 +104,19 @@ class HyperpartisanNewsRandomPredictor(xml.sax.ContentHandler):
 
 def main(inputDataset, outputDir):
     """Main method of this module."""
+    global num_articles, char_len
 
     with open(outputDir + "/" + runOutputFileName, 'w') as outFile:
         for file in os.listdir(inputDataset):
             if file.endswith(".xml"):
+                num_articles=0
+                char_len = 0
                 with open(inputDataset + "/" + file) as inputRunFile:
                     xml.sax.parse(inputRunFile, HyperpartisanNewsRandomPredictor(outFile))
+                print(file)
+                print('\tNumber of Articles == ', num_articles)
+                print('\tAvg char length == ', char_len/num_articles)
+
 
 
     print("The predictions have been written to the output folder.")
