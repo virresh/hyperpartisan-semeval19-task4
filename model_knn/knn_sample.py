@@ -17,7 +17,7 @@ train_y = truth[:800000]
 test_y = truth[800000:]
 
 error_rate = []
-for i in range(1,20):
+for i in range(1,50):
 	model = KNeighborsClassifier(n_neighbors=i)
 	model.fit(train_X,train_y)
 	wee = model.predict(test_X)
@@ -29,7 +29,7 @@ print(accuracy_score(wee, test_y))
 print(model.score(test_X, test_y))
 
 plt.figure()
-plt.plot(range(1,20), error_rate)
+plt.plot(range(1,50), error_rate)
 plt.title('accuracy_score vs knn input k')
 plt.xlabel('K')
 plt.ylabel('accuracy_score')
