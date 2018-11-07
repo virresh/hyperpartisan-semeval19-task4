@@ -10,7 +10,9 @@ df = pd.merge(features, truth, left_on='articleId', right_on='XML').drop('XML', 
 X = df.drop(['articleId', 'orientation'], axis=1)
 Y = df['orientation']
 
-
+"""
+These models use features such as sentiment of article etc etc
+"""
 
 from sklearn.model_selection import train_test_split, KFold, cross_val_score
 from sklearn.metrics import accuracy_score

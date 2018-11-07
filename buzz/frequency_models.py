@@ -10,7 +10,7 @@ text = []
 with open('test_data.txt', 'r') as data_file:
     for line in data_file:
         article_text = line[7:]
-        label = line[5]
+        label = int(line[5])
         article_id = line[:4]
         labels.append(label)
         text.append(article_text)
