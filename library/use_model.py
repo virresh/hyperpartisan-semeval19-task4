@@ -1,0 +1,20 @@
+import pandas as pd
+import numpy as np
+from nltk import word_tokenize
+import pickle
+import json
+
+classifier = None
+feature_extractor = None
+
+with open('library/xbg_model.pkl', 'rb') as f:
+	classifier = pickle.load(f)
+	feature_extractor = pickle.load(f)
+
+def predict_func(article_text):
+	feats = feature_extractor.transform([article_text])
+	predictions = classifier.predict(feats)
+	if predictions[0]:
+		return 'false'
+	else:
+		return 'true'
